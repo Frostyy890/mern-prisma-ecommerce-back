@@ -27,7 +27,7 @@ const configurationSchema = z.object({
     env: z
       .enum([Environment.Development, Environment.Production, Environment.Test])
       .default(Environment.Development),
-    port: z.number().default(3000),
+    port: z.number(),
   }),
   jwt: z.object({
     access_token: z.object({
@@ -39,6 +39,7 @@ const configurationSchema = z.object({
       expiry: z.string(),
       cookie_options: z.object({}),
     }),
+    token_type: z.string(),
   }),
   bcrypt: z.object({
     salt_rounds: z.number(),
@@ -63,6 +64,7 @@ const configuration: ConfigurationType = {
       expiry: process.env.REFRESH_TOKEN_EXPIRY ?? "1h",
       cookie_options,
     },
+    token_type: process.env.TOKEN_TYPE ?? "Bearer",
   },
   bcrypt: {
     salt_rounds: parseInt(process.env.SALT_ROUNDS ?? "10"),

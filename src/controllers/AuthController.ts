@@ -29,6 +29,14 @@ export default class AuthController {
       next(err);
     }
   }
+  async refresh(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { accessToken } = await this.authService.refresh(req.cookies.jwt);
+      res.status(HttpStatusCodes.OK).send({ accessToken });
+    } catch (err) {
+      next(err);
+    }
+  }
   async logout(req: Request, res: Response, next: NextFunction) {
     try {
       const { NO_CONTENT } = HttpStatusCodes;
@@ -43,14 +51,6 @@ export default class AuthController {
         return;
       }
       res.clearCookie("jwt", cookie_options).sendStatus(NO_CONTENT);
-    } catch (err) {
-      next(err);
-    }
-  }
-  async refresh(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { accessToken } = await this.authService.refresh(req.cookies.jwt);
-      res.status(HttpStatusCodes.OK).send({ accessToken });
     } catch (err) {
       next(err);
     }

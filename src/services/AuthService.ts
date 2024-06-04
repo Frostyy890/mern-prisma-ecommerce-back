@@ -16,7 +16,9 @@ export default class AuthService {
     if (!user || !(await bcrypt.compare(data.password, user.password)))
       throw new HttpException(HttpStatusCodes.BAD_REQUEST, "Invalid credentials");
     const { email, roles } = user;
-    return generateAuthTokens({ email, roles });
+    const { accessToken, refreshToken } = generateAuthTokens({ email, roles });
+    await this.userService.update(user.id, { refreshToken });
+    return { accessToken, refreshToken };
   }
   async register(data: RegisterUserInput): Promise<AuthTokens> {
     const newUser = await this.userService.create(data);
@@ -29,16 +31,16 @@ export default class AuthService {
   }
   async refresh(refreshToken: string): Promise<{ accessToken: string }> {
     const user = await this.userService.getByKey("refreshToken", refreshToken);
-    if (!user) throw new HttpException(HttpStatusCodes.FORBIDDEN);
-    const decoded: jwt.JwtPayload = await new Promise((resolve, _reject) => {
+    if (!user) throw new HttpException(HttpStatusCodes.FORBIDDEN, "Forbidden");
+    const decoded: jwt.JwtPayload = await new Promise((resolve, reject) => {
       jwt.verify(refreshToken, configuration.jwt.refresh_token.secret, (err, decoded) => {
-        if (err) throw new HttpException(HttpStatusCodes.FORBIDDEN);
+        if (err) reject(new HttpException(HttpStatusCodes.FORBIDDEN, "Forbidden"));
         else resolve(decoded as jwt.JwtPayload);
       });
     });
-    const isRolesMatch = decoded.roles.some((role: Role) => user.roles.includes(role));
+    const isRolesMatch = user.roles.every((role: Role) => decoded.roles.includes(role));
     if (decoded.email !== user.email || !isRolesMatch)
-      throw new HttpException(HttpStatusCodes.FORBIDDEN);
+      throw new HttpException(HttpStatusCodes.FORBIDDEN, "Forbidden");
     const { accessToken } = generateAuthTokens({ email: user.email, roles: user.roles });
     return { accessToken };
   }

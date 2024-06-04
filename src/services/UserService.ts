@@ -16,8 +16,7 @@ export default class UserService {
     return user;
   }
   async getByKey(key: keyof Prisma.UserWhereInput, value: Prisma.UserWhereInput[typeof key]) {
-    const user = await this.userRepository.getByKey(key, value);
-    return user;
+    return await this.userRepository.getByKey(key, value);
   }
   async create(data: CreateUserInput) {
     await this.ensureUniqueInput({ email: data.email, phone: data.phone });
