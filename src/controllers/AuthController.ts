@@ -1,12 +1,16 @@
 import type { Request, Response, NextFunction } from "express";
-import type AuthService from "../services/AuthService";
+import AuthService from "../services/AuthService";
 import configuration from "../config/configuration";
 import { HttpStatusCodes } from "../utils/HttpExceptions";
 
 const { cookie_options } = configuration.jwt.refresh_token;
+const authService = new AuthService();
 
 export default class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  private readonly authService: AuthService;
+  constructor() {
+    this.authService = authService;
+  }
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const { accessToken, refreshToken } = await this.authService.login(req.body);

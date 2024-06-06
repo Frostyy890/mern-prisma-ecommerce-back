@@ -1,12 +1,17 @@
-import { type Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
-import type UserRepository from "../repositories/UserRepository";
+import UserRepository from "../repositories/UserRepository";
 import type { CreateUserInput, UpdateUserInput } from "../validations/UserValidations";
 import { HttpException, HttpStatusCodes } from "../utils/HttpExceptions";
 import configuration from "../config/configuration";
 
+const userRepository = new UserRepository();
+
 export default class UserService {
-  constructor(private readonly userRepository: UserRepository) {}
+  private userRepository: UserRepository;
+  constructor() {
+    this.userRepository = userRepository;
+  }
   async getAll() {
     return await this.userRepository.getAll();
   }
@@ -19,18 +24,11 @@ export default class UserService {
     return await this.userRepository.getByKey(key, value);
   }
   async create(data: CreateUserInput) {
-    await this.ensureUniqueInput({ email: data.email, phone: data.phone });
     const hashedPassword = await bcrypt.hash(data.password, configuration.bcrypt.salt_rounds);
-    const newUser = await this.userRepository.create({
-      ...data,
-      password: hashedPassword,
-    });
-    return newUser;
+    return await this.userRepository.create({ ...data, password: hashedPassword });
   }
   async update(id: string, data: UpdateUserInput) {
     await this.getById(id);
-    if (data.email) await this.ensureUniqueInput({ email: data.email }, id);
-    if (data.phone) await this.ensureUniqueInput({ phone: data.phone }, id);
     if (data.password)
       data.password = await bcrypt.hash(data.password, configuration.bcrypt.salt_rounds);
     return await this.userRepository.update(id, data);
@@ -38,19 +36,5 @@ export default class UserService {
   async delete(id: string) {
     await this.getById(id);
     await this.userRepository.delete(id);
-  }
-
-  async ensureUniqueInput(input: Prisma.UserWhereInput, id?: string) {
-    const keys = Object.keys(input) as (keyof Prisma.UserWhereInput)[];
-    for (const key of keys) {
-      const value = input[key];
-      const user = await this.userRepository.getByKey(key, value);
-      if (user)
-        if (!id || user.id !== id)
-          throw new HttpException(
-            HttpStatusCodes.CONFLICT,
-            `User with ${key} ${value} already exists!`
-          );
-    }
   }
 }

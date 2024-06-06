@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { type CookieOptions } from "express";
+import type { CookieOptions } from "express";
 import { z } from "zod";
 
 dotenv.config();
@@ -51,7 +51,7 @@ export type ConfigurationType = z.infer<typeof configurationSchema>;
 const configuration: ConfigurationType = {
   app: {
     env: isValidEnv(process.env.NODE_ENV) ? process.env.NODE_ENV : Environment.Development,
-    port: parseInt(process.env.PORT ?? "3000"),
+    port: Number.parseInt(process.env.PORT ?? "3000"),
   },
   jwt: {
     access_token: {
@@ -67,7 +67,7 @@ const configuration: ConfigurationType = {
     token_type: process.env.TOKEN_TYPE ?? "Bearer",
   },
   bcrypt: {
-    salt_rounds: parseInt(process.env.SALT_ROUNDS ?? "10"),
+    salt_rounds: Number.parseInt(process.env.SALT_ROUNDS ?? "10"),
   },
 };
 export default configuration;

@@ -1,8 +1,13 @@
 import type { NextFunction, Request, Response } from "express";
-import type UserService from "../services/UserService";
+import UserService from "../services/UserService";
 import { HttpStatusCodes } from "../utils/HttpExceptions";
+
+const userService = new UserService();
 export default class UserController {
-  constructor(private readonly userService: UserService) {}
+  private readonly userService: UserService;
+  constructor() {
+    this.userService = userService;
+  }
   async getAll(_req: Request, res: Response, next: NextFunction) {
     try {
       const users = await this.userService.getAll();

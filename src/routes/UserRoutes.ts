@@ -1,14 +1,10 @@
 import { Router } from "express";
-import UserRepository from "../repositories/UserRepository";
-import UserService from "../services/UserService";
 import UserController from "../controllers/UserController";
 import ValidateRequest from "../middlewares/ValidateRequest";
 import { createUserSchema, updateUserSchema } from "../validations/UserValidations";
 import Auth from "../middlewares/Auth";
 
-const userRepository = new UserRepository();
-const userService = new UserService(userRepository);
-const userController = new UserController(userService);
+const userController = new UserController();
 const authMiddleware = new Auth();
 const router = Router();
 

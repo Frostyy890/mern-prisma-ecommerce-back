@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { type z, ZodError } from "zod";
 import { HttpValidationExceptions } from "../utils/HttpExceptions";
+import configuration, { Environment } from "../config/configuration";
 
 const ValidateRequest = (validationSchema: z.Schema) => {
   return (req: Request, _res: Response, next: NextFunction) => {
@@ -9,13 +10,14 @@ const ValidateRequest = (validationSchema: z.Schema) => {
       next();
     } catch (err) {
       if (err instanceof ZodError) {
-        const errorMessages = err.errors.map(
-          (error) => `${error.path.join(".")}: ${error.message}`
-        );
+        const errorMessages =
+          configuration.app.env === Environment.Production
+            ? ["Bad Request"]
+            : err.errors.map(
+                (error) => `${error.path.join(".")} is ${error.message.toLowerCase()}`
+              );
         next(new HttpValidationExceptions(errorMessages));
-        return;
       }
-      next(err);
     }
   };
 };

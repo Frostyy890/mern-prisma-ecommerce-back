@@ -2,8 +2,9 @@ import type { Request, Response, NextFunction } from "express";
 import { HttpException, HttpStatusCodes } from "../utils/HttpExceptions";
 import jwt from "jsonwebtoken";
 import configuration from "../config/configuration";
-import { Role } from "@prisma/client";
+import type { Role } from "@prisma/client";
 import { getPermissionsByRoles } from "../config/permissions";
+import { JwtService } from "../services/JWTService";
 
 export interface AuthRequest extends Request {
   user?: {
@@ -12,7 +13,13 @@ export interface AuthRequest extends Request {
   };
 }
 
+const jwtService = new JwtService();
+
 export default class Auth {
+  private readonly jwtService: JwtService;
+  constructor() {
+    this.jwtService = jwtService;
+  }
   verifyToken(req: AuthRequest, _res: Response, next: NextFunction): void {
     const { authorization } = req.headers;
     if (!authorization) throw new HttpException(HttpStatusCodes.UNAUTHORIZED, "Unauthorized");
